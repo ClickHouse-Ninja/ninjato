@@ -20,4 +20,4 @@ CREATE TABLE IF NOT EXISTS ninjato.series (
         Key String 
         , Value Float64
     )
-) Null;
+) Engine Null;

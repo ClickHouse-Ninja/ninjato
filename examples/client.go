@@ -21,16 +21,18 @@ func main() {
 		BacklogSize: 25000,
 	})
 	checkError(err)
+	var (
+		datacenters = []string{"EU", "US", "RU"}
+		countries   = []string{"UK", "US", "RU", "UA"}
+	)
 	for {
-		var i float64
-		for i = 0; i < 15000; i++ {
-			err := client.Push(point.New("count", i).WithTags(map[string]string{
-				"datacenter": "EU",
-				"country":    "RU",
+		for i := 0; i < 15000; i++ {
+			err := client.Push(point.New("total_requests", 0.001*float64(i%10)).WithTags(map[string]string{
+				"datacenter": datacenters[i%len(datacenters)],
+				"country":    countries[i%len(countries)],
 			}).WithFields(map[string]float64{
-				"cpu":    123 * i,
-				"memory": 42 * i,
-				"calls":  56 * i,
+				"cpu":    123 * float64(i),
+				"memory": 42 * float64(i),
 			}))
 			checkError(err)
 		}
