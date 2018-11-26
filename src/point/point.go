@@ -4,14 +4,14 @@ import (
 	"github.com/ClickHouse-Ninja/ninjato/src/atime"
 )
 
-const magic = 146
+const magicNumber = 146
 
 func New(label string, value float64) *Point {
 	return &Point{
-		Label:     label,
-		Value:     value,
-		timestamp: int32(atime.Now().Unix()),
-		magic:     magic,
+		Label:       label,
+		Value:       value,
+		timestamp:   int32(atime.Now().Unix()),
+		magicNumber: magicNumber,
 	}
 }
 
@@ -21,12 +21,12 @@ type (
 )
 
 type Point struct {
-	Label     string
-	Value     float64
-	tags      TagsPair
-	fields    FieldsPair
-	timestamp int32
-	magic     uint8
+	Label       string
+	Value       float64
+	tags        TagsPair
+	fields      FieldsPair
+	timestamp   int32
+	magicNumber uint8
 }
 
 func (p *Point) WithTags(tags Tags) *Point {
@@ -58,7 +58,7 @@ func (p *Point) Timestamp() int32 {
 }
 
 func (p *Point) IsValid() bool {
-	return p.magic == magic && p.timestamp != 0
+	return p.magicNumber == magicNumber && p.timestamp != 0
 }
 
 func (p *Point) Tags() *TagsPair {

@@ -20,6 +20,4 @@ CREATE TABLE IF NOT EXISTS ninjato.series (
         Key String 
         , Value Float64
     )
-) Engine MergeTree PARTITION BY tuple() ORDER BY DateTime
-
-Null;
+) Null;

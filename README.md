@@ -23,7 +23,7 @@
 |fields len|UInt8|
 |fields keys|N String|
 |fields values|N Float64|
-|control byte| magic byte (146) |
+|magic number|byte (146)|
 
 **String** 
 ```

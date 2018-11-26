@@ -49,7 +49,7 @@ func Marshal(encoder *binary.Encoder, point *Point) (err error) {
 			return err
 		}
 	}
-	if err = encoder.Uint8(point.magic); err != nil {
+	if err = encoder.Uint8(point.magicNumber); err != nil {
 		return err
 	}
 	return nil
@@ -111,7 +111,7 @@ func Unmarshal(decoder *binary.Decoder, point *Point) (err error) {
 		}
 		sort.Sort(point.fields)
 	}
-	if point.magic, err = decoder.UInt8(); err != nil {
+	if point.magicNumber, err = decoder.UInt8(); err != nil {
 		return err
 	}
 	return nil

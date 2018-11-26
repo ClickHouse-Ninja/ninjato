@@ -15,9 +15,10 @@ func checkError(err error) {
 }
 
 func main() {
-	client, err := ninjato.NewClient("test", ninjato.ClientConfig{
-		Address: "127.0.0.1:1053",
-		Debug:   false,
+	client, err := ninjato.NewClient("test_service", ninjato.ClientConfig{
+		Debug:       false,
+		Address:     "127.0.0.1:1053",
+		BacklogSize: 25000,
 	})
 	checkError(err)
 	for {
@@ -27,13 +28,9 @@ func main() {
 				"datacenter": "EU",
 				"country":    "RU",
 			}).WithFields(map[string]float64{
-				"cpu":     123 * i,
-				"memory":  42 * i,
-				"calls":   56 * i,
-				"device":  1 * i,
-				"browser": 42 * i,
-				"os":      15 * i,
-				"df":      i,
+				"cpu":    123 * i,
+				"memory": 42 * i,
+				"calls":  56 * i,
 			}))
 			checkError(err)
 		}
