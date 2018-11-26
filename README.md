@@ -1,4 +1,11 @@
-# Ninjato
+# Ninjato - horizontally scalable metrics server build on top of ClickHouse.
+
+# @TODO
+
+- [ ] Documentation  
+- [ ] Reports examples (views and queries)
+- [ ] Grafana example dashboard
+- [ ] Prometheus remote RW storage 
 
 ## Protocol 
 
