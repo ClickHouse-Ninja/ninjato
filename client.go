@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"runtime"
 	"time"
 
 	"github.com/pierrec/lz4"
@@ -19,13 +20,12 @@ type Client interface {
 const (
 	PayloadSize = 16 * 1024
 	BacklogSize = 10000
-	Concurrency = 4
 )
 
 func NewClient(service string, config ClientConfig) (_ Client, err error) {
 	var (
 		backlog     = BacklogSize
-		concurrency = Concurrency
+		concurrency = runtime.NumCPU()
 	)
 	if config.BacklogSize > 0 {
 		backlog = config.BacklogSize

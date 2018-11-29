@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net"
+	"runtime"
 	"time"
 
 	"github.com/ClickHouse-Ninja/ninjato/src/binary"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	Concurrency = 4
+	BacklogSize     = 5000
+	MaxBlockInQueue = 20
 )
 
 func NewServer(config ServerConfig) (*Server, error) {
@@ -31,27 +33,34 @@ func NewServer(config ServerConfig) (*Server, error) {
 		return nil, err
 	}
 	var (
-		concurrency = Concurrency
+		concurrency     = runtime.NumCPU()
+		backlogSize     = BacklogSize
+		maxBlockInQueue = MaxBlockInQueue
+		logger          = log.Printf
 	)
+	if config.Logger != nil {
+		logger = config.Logger
+	}
+	if config.BacklogSize != 0 {
+		backlogSize = config.BacklogSize
+	}
 	if config.Concurrency != 0 {
 		concurrency = config.Concurrency
 	}
-	server := Server{
+	if config.MaxBlockInQueue != 0 {
+		maxBlockInQueue = config.MaxBlockInQueue
+	}
+	return &Server{
 		dsn:         config.DSN,
 		block:       block,
-		blocks:      make(chan *data.Block, 50),
-		fields:      make(chan []string, 500),
-		backlog:     make(chan packet, 3000),
+		blocks:      make(chan *data.Block, maxBlockInQueue),
+		fields:      make(chan []string, 100),
+		backlog:     make(chan packet, backlogSize),
 		idleConn:    make(chan clickhouse.Clickhouse, concurrency),
 		address:     config.Address,
 		concurrency: concurrency,
-	}
-	for i := 0; i < concurrency; i++ {
-		go server.backgroundMakeBlock()
-		go server.backgroundWriteBlock()
-	}
-	go server.backgroundWriteFields()
-	return &server, nil
+		logger:      logger,
+	}, nil
 }
 
 type Server struct {
@@ -63,13 +72,24 @@ type Server struct {
 	idleConn    chan clickhouse.Clickhouse
 	address     string
 	concurrency int
+	logger      func(string, ...interface{})
 }
 
 func (srv *Server) Listen() error {
-	listener, err := net.ListenPacket("udp", srv.address)
+	conn, err := net.ListenPacket("udp", srv.address)
 	if err != nil {
 		return err
 	}
+	for i := 0; i < srv.concurrency; i++ {
+		go srv.backgroundMakeBlock()
+		go srv.backgroundWriteBlock()
+		go srv.listen(conn)
+	}
+	srv.backgroundWriteFields()
+	return nil
+}
+
+func (srv *Server) listen(conn net.PacketConn) {
 	var (
 		buffer  buffer
 		reader  = lz4.NewReader(&buffer)
@@ -79,7 +99,7 @@ func (srv *Server) Listen() error {
 		pointsLen = 10
 	)
 	for {
-		if ln, _, err := listener.ReadFrom(buffer.payload[:]); err == nil {
+		if ln, _, err := conn.ReadFrom(buffer.payload[:]); err == nil {
 			buffer.idx = 0
 			buffer.len = ln
 			if service, err := decoder.String(); err == nil {
@@ -205,7 +225,7 @@ func (srv *Server) conn() (clickhouse.Clickhouse, error) {
 func (srv *Server) releaseConn(conn clickhouse.Clickhouse, err error) {
 	if err != nil || len(srv.idleConn) > srv.concurrency {
 		if err != nil {
-			log.Println(err)
+			srv.logger("release connect: ", err)
 		}
 		conn.Close()
 		return

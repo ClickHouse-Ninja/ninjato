@@ -7,9 +7,13 @@ import (
 )
 
 type ServerConfig struct {
-	DSN         string
-	Address     string
-	Concurrency int
+	DSN             string
+	Address         string
+	PprofAddr       string
+	BacklogSize     int
+	Concurrency     int
+	MaxBlockInQueue int
+	Logger          func(string, ...interface{})
 }
 
 type packet struct {
